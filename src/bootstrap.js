@@ -30,7 +30,7 @@
     virtualclass.gObj.docs = 'init';
     await virtualclass.system.mediaDevices.getMediaDeviceInfo();
     wbUser.virtualclassPlay = +wbUser.virtualclassPlay;
-
+    virtualclass.gObj.orginalUserId = wbUser.id;
     if (wbUser.virtualclassPlay) {
       // virtualclass.gObj.sessionClear = true;
       virtualclass.gObj.role = 's';
@@ -69,9 +69,17 @@
     } else if (prvUser !== null) {
       prvUser = JSON.parse(prvUser);
       if (prvUser.id !== wbUser.id || prvUser.room !== wbUser.room
-        || wbUser.role !== prvUser.role || prvUser.settings !== virtualclassSetting.settings) {
+        || wbUser.role !== prvUser.role) {
         await virtualclass.config.endSession();
+      } else if (prvUser.settings !== virtualclassSetting.settings) {
+        virtualclass.gObj.refreshSession = true;
+        virtualclass.gObj.toBeSendSession = virtualclassSetting.settings;
+        // ioAdapter.mustSend({ cf: 'settings', Hex: virtualclassSetting.settings, time: Date.now() });
+        // console.log('setting prv ', prvUser.settings, ' new ', virtualclassSetting.settings);
+        virtualclass.setPrvUser(); // we need to set this every time it comes from moodle
+        // console.log('====> Settings previous  ', prvUser.settings, ' new ', virtualclassSetting.settings);
       }
+      console.log('Previous user ', JSON.stringify(prvUser));
     } else if (virtualclass.gObj.myConfig !== null) {
       config = JSON.parse(virtualclass.gObj.myConfig);
       const roomCreatedTime = config.createdDate;
@@ -87,6 +95,8 @@
 
 
   Bootstrap.prototype.loadData = function () {
+    let appIs;
+    let videoObj;
     if (roles.hasControls()) {
       localStorage.setItem('uRole', virtualclass.gObj.uRole);
     }
@@ -111,19 +121,19 @@
       virtualclass.previousApp = previousApp;
       const appNameUpper = previousApp.name;
 
-      var appIs = appNameUpper.charAt(0).toUpperCase() + appNameUpper.slice(1);
+      appIs = appNameUpper.charAt(0).toUpperCase() + appNameUpper.slice(1);
       if (previousApp.name === 'Yts' || (previousApp.name === 'DocumentShare')) {
         if (previousApp.metaData == null) {
-          var videoObj = null;
+          videoObj = null;
         } else {
-          var videoObj = previousApp.metaData;
+          videoObj = previousApp.metaData;
           videoObj.fromReload = true;
         }
       } else if (previousApp.name === 'Video') {
         if (previousApp.metaData == null || previousApp.metaData.init == null) {
-          var videoObj = null;
+          videoObj = null;
         } else {
-          var videoObj = previousApp.metaData;
+          videoObj = previousApp.metaData;
           videoObj.fromReload = true;
         }
       } else if (previousApp.name === 'Whiteboard') {
@@ -137,15 +147,15 @@
         }
       }
     } else {
-      var appIs = virtualclass.gObj.defaultApp;
+      appIs = virtualclass.gObj.defaultApp;
     }
 
     if (typeof videoObj === 'undefined') {
-      var videoObj = null;
+      videoObj = null;
     }
 
     virtualclass.precheck = localStorage.getItem('precheck');
-    var isPrecheck = localStorage.getItem('precheck');
+    const isPrecheck = localStorage.getItem('precheck');
     if (isPrecheck != null) {
       virtualclass.isPrecheck = JSON.parse(isPrecheck);
     }
@@ -202,8 +212,8 @@
       // we can not make this synchronous, because after this,
       // we are connecting the web socket
     }
-    virtualclass.stickybarWidth();
-    virtualclass.chatBarTabWidth();
+    // virtualclass.stickybarWidth();
+    // virtualclass.chatBarTabWidth();
   };
 
   Bootstrap.prototype.readyToGo = async function () {
@@ -227,12 +237,18 @@
   };
 
   Bootstrap.prototype.notifyAboutCPU = function () {
+    const strCpu = virtualclass.lang.getString('notcompatiblecpu');
+    const strRam = virtualclass.lang.getString('notcompatibleram');
     if (!virtualclass.system.isCompatibleCPU()) {
-      virtualclass.view.createErrorMsg(virtualclass.lang.getString('notcompatiblecpu'), 'errorContainer', 'virtualclassAppFooterPanel', { className: 'notcompatiblecpu' });
+      virtualclass.view.createErrorMsg(strCpu, 'errorContainer', 'virtualclassAppFooterPanel', {
+        className: 'notcompatiblecpu',
+      });
     }
 
     if (!virtualclass.system.isCompatibleRAM()) {
-      virtualclass.view.createErrorMsg(virtualclass.lang.getString('notcompatibleram'), 'errorContainer', 'virtualclassAppFooterPanel', { className: 'notcompatiblecpu' });
+      virtualclass.view.createErrorMsg(strRam, 'errorContainer', 'virtualclassAppFooterPanel', {
+        className: 'notcompatiblecpu',
+      });
     }
   };
   window.Bootstrap = Bootstrap;

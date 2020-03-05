@@ -29,6 +29,7 @@ const preCheck = {
 
     if (preCheckContainer != null) {
       preCheckContainer.style.display = 'block';
+      document.getElementById('virtualclassCont').dataset.currwindow = 'precheck';
     }
 
     const virtualclassApp = document.querySelector('#virtualclassCont #virtualclassApp');
@@ -53,12 +54,14 @@ const preCheck = {
   },
 
   initSkip() {
+    let virtualclassPreCheck;
+    let virtualclassApp;
     // console.log('Skip clicked');
     micTesting.makeAudioEmpty();
     if (localStorage.getItem('precheck')) {
-      var virtualclassPreCheck = document.getElementById('preCheckcontainer');
+      virtualclassPreCheck = document.getElementById('preCheckcontainer');
       virtualclassPreCheck.style.display = 'none';
-      var virtualclassApp = document.getElementById('virtualclassApp');
+      virtualclassApp = document.getElementById('virtualclassApp');
       virtualclassApp.style.display = 'flex';
       // virtualclass.videoHost._resetPrecheck();
       // virtualclass.media.audio.initAudiocontext();
@@ -66,16 +69,15 @@ const preCheck = {
       // virtualclass.media.audio.initAudiocontext();
       virtualclass.popup.waitMsg();
       virtualclass.makeReadySocket();
-
-      var virtualclassPreCheck = document.getElementById('preCheckcontainer');
+      virtualclassPreCheck = document.getElementById('preCheckcontainer');
       virtualclassPreCheck.style.display = 'none';
-
-
-      var virtualclassApp = document.getElementById('virtualclassApp');
+      virtualclassApp = document.getElementById('virtualclassApp');
       virtualclassApp.style.display = 'flex';
       localStorage.setItem('precheck', true);
       virtualclass.videoHost.afterSessionJoin();
     }
+
+    document.getElementById('virtualclassCont').dataset.currwindow = 'normal';
 
     // virtualclass.media.audio.initAudiocontext();
 
@@ -88,8 +90,8 @@ const preCheck = {
 
     virtualclass.gObj.precheckScrn = false;
     virtualclass.precheck.afterComplete();
-    virtualclass.stickybarWidth();
-    virtualclass.chatBarTabWidth();
+    // virtualclass.stickybarWidth();
+    // virtualclass.chatBarTabWidth();
   },
 
   cancelAudioGraph() {
@@ -445,7 +447,7 @@ const preCheck = {
             audioContext: this.graphContext || null,
             audioScriptProcessor: this.graphProcessor || null,
             plugins: [WaveSurfer.microphone.create()],
-            height: 50,
+            height: 20,
             maxCanvasWidth: 500,
           });
 
@@ -574,18 +576,15 @@ const preCheck = {
       // localStorage.setItem('precheck', true);
       virtualclass.videoHost._resetPrecheck();
       virtualclass.precheck.afterComplete();
-      virtualclass.stickybarWidth();
-      virtualclass.chatBarTabWidth();
+      // virtualclass.stickybarWidth();
+      // virtualclass.chatBarTabWidth();
     },
 
     joinSession() {
       virtualclass.popup.waitMsg();
       virtualclass.makeReadySocket();
 
-      var virtualclassPreCheck = document.getElementById('preCheckcontainer');
-      virtualclassPreCheck.style.display = 'none';
-
-      var virtualclassPreCheck = document.getElementById('preCheckcontainer');
+      const virtualclassPreCheck = document.getElementById('preCheckcontainer');
       virtualclassPreCheck.style.display = 'none';
 
       const virtualclassApp = document.getElementById('virtualclassApp');

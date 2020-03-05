@@ -183,14 +183,14 @@ let globalImageData = {};
           virtualclass.gObj.studentSSstatus.shareToAll = true;
         }
         app = stype;
-        const screenCont = document.getElementById(`virtualclass${virtualclass.apps.ss}`);
+        let screenCont = document.getElementById(`virtualclass${virtualclass.apps.ss}`);
 
         if (typeof virtualclass[app] !== 'object' || screenCont == null) {
           if (typeof vtype !== 'undefined') {
             virtualclass.recorder.recImgPlay = true;
           }
-          var stool = 'ScreenShare';
-          virtualclass.makeAppReady({app: stool});
+          const shtool = 'ScreenShare';
+          virtualclass.makeAppReady({ app: shtool });
 
         } else {
           if (virtualclass.currApp !== 'ScreenShare') {
@@ -228,9 +228,11 @@ let globalImageData = {};
 
         virtualclass.previous = virtualclass[app].id;
 
-        if (!this.szoom) {
-          this.initZoom();
-        }
+        if (!this.szoom) this.initZoom();
+        screenCont = document.getElementById(`virtualclass${virtualclass.apps.ss}`);
+        if (virtualclass.gObj.screenShareId) screenCont.dataset.screenshareid = virtualclass.gObj.screenShareId;
+        virtualclass.userInteractivity.makeReadyContext();
+
       },
 
       initZoom() {
@@ -293,7 +295,7 @@ let globalImageData = {};
         const fitToScreen = document.querySelector('#virtualclassScreenShare .zoomControler .fitScreen');
         if (fitToScreen) {
           fitToScreen.dataset.currstate = 'normalview';
-          const dataTitleElem = document.querySelector('#virtualclassScreenShare .fitScreen .congtooltip');
+          const dataTitleElem = document.querySelector('#virtualclassScreenShare .fitScreen.congtooltip');
           dataTitleElem.dataset.title = virtualclass.lang.getString('normalView');
         }
 
@@ -310,7 +312,7 @@ let globalImageData = {};
         const fitToScreen = document.querySelector('#virtualclassScreenShare .zoomControler .fitScreen');
         if (fitToScreen) {
           fitToScreen.dataset.currstate = 'fittoscreen';
-          const dataTitleElem = document.querySelector('#virtualclassScreenShare .fitScreen .congtooltip');
+          const dataTitleElem = document.querySelector('#virtualclassScreenShare .fitScreen.congtooltip');
           dataTitleElem.dataset.title = virtualclass.lang.getString('fitToScreen');
         }
 
@@ -808,6 +810,11 @@ let globalImageData = {};
          * making screenshare active application and removing previous application
          */
         this.video.onloadedmetadata = function onloadedmetadata() {
+          const date = new Date();
+          const timeInMiliseconds = date.getTime();
+          virtualclass.gObj.screenShareId = `ss_${timeInMiliseconds}`;
+          virtualclass.userInteractivity.makeReadyContext();
+          ioAdapter.mustSend({ cf: 'screenShareId', id: virtualclass.gObj.screenShareId});
           that.width = container.width;
           that.height = container.height;
 
@@ -821,7 +828,6 @@ let globalImageData = {};
           });
 
           that.sharing();
-          virtualclass.vutil.setContainerWidth(res, virtualclass.currApp);
 
           if (roles.hasControls()) {
             // TODO This should be invoke at one place
@@ -1096,7 +1102,9 @@ let globalImageData = {};
        */
       getContainerDimension() {
         const vidCont = document.getElementById(`${this.id}Local`);
-        return { width: vidCont.offsetWidth, height: vidCont.offsetHeight };
+        // apply codacy rule
+        const obj = { width: vidCont.offsetWidth, height: vidCont.offsetHeight };
+        return obj;
       },
       /**
        * Drawing the image over the canvas
@@ -1266,14 +1274,16 @@ let globalImageData = {};
         changeSsInfoSelf(elem) {
           elem.classList.remove('selfView');
           elem.classList.add('shareToAll');
-          elem.children[0].innerHTML = virtualclass.lang.getString('selfview'); // for next time
+          elem.setAttribute('data-title', virtualclass.lang.getString('selfview'));
+          // elem.children[0].innerHTML = virtualclass.lang.getString('selfview'); // for next time
           virtualclass.gObj.studentSSstatus.shareToAll = true;
         },
 
         changeSsInfoShareToAll(elem) {
           elem.classList.remove('shareToAll');
           elem.classList.add('selfView');
-          elem.children[0].innerHTML = virtualclass.lang.getString('sharetoall'); // for next time
+          elem.setAttribute('data-title', virtualclass.lang.getString('sharetoall'));
+          // elem.children[0].innerHTML = virtualclass.lang.getString('sharetoall'); // for next time
           virtualclass.gObj.studentSSstatus.shareToAll = false;
         },
 

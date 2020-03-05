@@ -24,10 +24,11 @@
      * @param  imageTag  boolean value
      */
     displayMessage(msg, id, className, intoAppend, imageTag, wid) {
+      let msgBox;
       if (typeof imageTag === 'undefined') {
-        var msgBox = this.createMsgBox(msg, id, className);
+        msgBox = this.createMsgBox(msg, id, className);
       } else {
-        var msgBox = this.createMsgBox(msg, id, className, imageTag);
+        msgBox = this.createMsgBox(msg, id, className, imageTag);
       }
       const parTag = document.getElementById(`vcanvas${wid}`);
       if (typeof intoAppend !== 'undefined') {
@@ -50,6 +51,7 @@
       }
       let classes = 'error';
       let errorCont = document.getElementById(contId);
+      let closebutton;
       if (errorCont == null) {
         errorCont = document.createElement('div');
         errorCont.id = contId;
@@ -75,9 +77,9 @@
       closebutton = document.querySelector(`#${msgId}`);
 
       if (closebutton == null) {
-        var closebutton = document.createElement('span');
+        closebutton = document.createElement('span');
         closebutton.id = 'closeMsg';
-        closebutton.innerHTML = 'X';
+        closebutton.innerHTML = 'x';
         errorCont.appendChild(closebutton);
       }
 
@@ -91,6 +93,54 @@
         addBeforeElem.parentNode.insertBefore(errorCont, addBeforeElem);
       }
       return errorCont.id;
+    },
+
+    createAskQuestionMsg(msg, contId, addBefore, attribute) {
+      const cpuNotCompatible = document.querySelector('#msgContainer');
+      if (cpuNotCompatible !== null) { // HIGH PRIORITY ERROR
+        return;
+      }
+      let classes = 'askQuestionMsg';
+      let cont = document.getElementById(contId);
+      if (cont == null) {
+        cont = document.createElement('div');
+        cont.id = contId;
+        cont.innerHTML = `<span className="${classes}">${msg}</span>`;
+      } else {
+        if (attribute != null) {
+          if (Object.prototype.hasOwnProperty.call(attribute, 'className')) {
+            const elem = document.querySelector(`#${contId}.${attribute.className}`);
+            if (elem != null) {
+              elem.parentNode.removeChild(elem);
+            }
+            classes += ` ${attribute.className}`;
+          }
+        }
+        const spanMsg = `<span className="${classes}">${msg}</span>`;
+
+        cont.innerHTML = spanMsg;
+      }
+
+      const msgId = 'closeAskQuestionMsg';
+      let closebutton = document.querySelector(`#${msgId}`);
+
+      if (closebutton == null) {
+        closebutton = document.createElement('span');
+        closebutton.id = 'closeAskQuestionMsg';
+        closebutton.innerHTML = 'X';
+        cont.appendChild(closebutton);
+      }
+
+      closebutton.onclick = function () {
+        const parentelem = document.querySelector(`#${contId}`);
+        parentelem.parentNode.removeChild(parentelem);
+      };
+
+      const addBeforeElem = document.querySelector(`.${addBefore}`);
+      if (addBeforeElem !== null) {
+        addBeforeElem.parentNode.insertBefore(cont, addBeforeElem);
+      }
+      return cont.id;
     },
     /**
      * Removes the error message
@@ -167,12 +217,13 @@
      * @param classname class webRtc
      */
     multiMediaMsg(className) {
+      let msg;
       if (virtualclass.system.mybrowser.name === 'Firefox') {
-        var msg = virtualclass.lang.getString('wbrtcMsgFireFox');
-        // Todo handle this is in better way
+        msg = virtualclass.lang.getString('wbrtcMsgFireFox');
+        // Todo handle sthis is in better way
         // this.displayMessage(msg, "fireFoxWebrtcCont", this.msgBoxClass + className);
       } else if (virtualclass.system.mybrowser.name === 'Chrome') {
-        var msg = virtualclass.lang.getString('wbrtcMsgChrome');
+        msg = virtualclass.lang.getString('wbrtcMsgChrome');
         // Todo handle this is in better way
         // this.displayMessage(msg, "chormeWebrtcCont", this.msgBoxClass + className);
       }
@@ -182,13 +233,14 @@
      * @param  className
      */
     canvasDrawMsg(className, id) {
+      let msg;
       const mainContainer = document.getElementById(`vcanvas${id}`);
       mainContainer.classList.add('canvasMsgBoxParent');
       if (virtualclass.system.mybrowser.name === 'Firefox') {
-        var msg = virtualclass.lang.getString('canvasDrawMsg');
+        msg = virtualclass.lang.getString('canvasDrawMsg');
         this.displayMessage(msg, 'canvasDrawMsgContFirefox', this.msgBoxClass + className, 'containerWb');
       } else if (virtualclass.system.mybrowser.name === 'Chrome') {
-        var msg = virtualclass.lang.getString('canvasDrawMsg');
+        msg = virtualclass.lang.getString('canvasDrawMsg');
         this.displayMessage(msg, 'canvasDrawMsgContChrome', this.msgBoxClass + className, 'containerWb', null, id);
       }
     },
@@ -294,10 +346,6 @@
       }
     }
 
-    // console.log('Container height ' + res.height);
-    virtualclass.vutil.setContainerWidth(res, virtualclass.currApp);
-    // console.log('Window resize event ');
-
     const cwb = virtualclass.gObj.currWb;
     if (typeof cwb !== 'undefined' && (typeof virtualclass.wb[cwb] !== 'undefined')
       && Object.prototype.hasOwnProperty.call(virtualclass.wb[cwb], 'vcan')) {
@@ -328,6 +376,7 @@
       if (Object.prototype.hasOwnProperty.call(virtualclass.gObj, 'fitToScreenOnResize')) {
         clearTimeout(virtualclass.gObj.fitToScreenOnResize);
       }
+
       virtualclass.gObj.fitToScreenOnResize = setTimeout(
         () => {
           if (virtualclass.currApp === 'ScreenShare') {
@@ -344,8 +393,31 @@
     }
 
     virtualclass.chat.calculateViewPortForMessageBox();
-    virtualclass.stickybarWidth();
-    virtualclass.chatBarTabWidth();
+
+    if (virtualclass.gObj.inputFocusHandler) {
+      clearTimeout(virtualclass.gObj.inputFocusHandler);
+    }
+    virtualclass.gObj.inputFocusHandler = setTimeout(() => {
+      console.log('===> triger input focus');
+      if (!virtualclass.gObj.notHandleInputFocusHandler) {
+
+        if (document.getElementById('virtualclassCont').dataset.currwindow === 'normal') {
+          // const virtualclassCont = document.querySelector('#virtualclassCont.focusInput');
+          if (window.innerHeight >= virtualclass.gObj.initHeight) {
+            virtualclass.vutil.inputFocusOutHandler();
+          } else {
+            virtualclass.vutil.inputFocusHandler();
+          }
+        }
+        if (window.innerWidth > window.innerHeight) { // Apply only on landscape mode
+          virtualclass.gObj.initHeight = window.innerHeight;
+        }
+      }
+      delete virtualclass.gObj.notHandleInputFocusHandler;
+    }, 1100);
+
+    // virtualclass.stickybarWidth();
+    // virtualclass.chatBarTabWidth();
   };
 
   window.view = view;
